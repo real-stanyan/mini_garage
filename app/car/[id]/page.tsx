@@ -1,4 +1,4 @@
-// components/GarageShowcase.tsx
+// app/car/[id]/page.tsx
 "use client";
 
 import { Suspense, useEffect, useMemo, useRef } from "react";
@@ -13,6 +13,7 @@ import {
   Preload,
 } from "@react-three/drei";
 import * as THREE from "three";
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { useParams } from "next/navigation";
 import carsJson from "@/data/CarData.json";
 import {
@@ -66,12 +67,13 @@ function LoadingCover() {
 function Garage({ path }: { path: string }) {
   const { scene } = useGLTF(path);
   useEffect(() => {
-    scene.traverse((o: any) => {
-      if (o.isMesh) {
+    scene.traverse((o: THREE.Object3D) => {
+      if (o instanceof THREE.Mesh) {
         o.receiveShadow = true;
         o.castShadow = false;
-        if (o.material && "envMapIntensity" in o.material) {
-          o.material.envMapIntensity = 0.4;
+        const mat = o.material;
+        if (mat && !Array.isArray(mat)) {
+          (mat as THREE.MeshStandardMaterial).envMapIntensity = 0.4;
         }
       }
     });
@@ -80,23 +82,17 @@ function Garage({ path }: { path: string }) {
 }
 
 /* ---------- Model: Car ---------- */
-function Car({
-  path,
-  x,
-  y,
-  z,
-  scale,
-}: {
+function Car(props: {
   path: string;
   x: number;
   y: number;
   z: number;
   scale: number;
 }) {
-  const { scene } = useGLTF(path);
+  const { scene } = useGLTF(props.path);
   const g = useRef<THREE.Group>(null);
   return (
-    <group ref={g} position={[x, y, z]} scale={scale}>
+    <group ref={g} position={[props.x, props.y, props.z]} scale={props.scale}>
       <primitive object={scene} />
     </group>
   );
@@ -114,7 +110,7 @@ function CameraTween({
   controlsRef,
   apiRef,
 }: {
-  controlsRef: React.MutableRefObject<any>;
+  controlsRef: React.MutableRefObject<OrbitControlsImpl | null>;
   apiRef: React.MutableRefObject<ViewApi | null>;
 }) {
   const { camera } = useThree();
@@ -139,9 +135,9 @@ function CameraTween({
           pos.y as number,
           pos.z as number
         );
-        state.current.fromTarget.copy(
-          controlsRef.current?.target || new THREE.Vector3()
-        );
+        const targetNow =
+          controlsRef.current?.target ?? new THREE.Vector3(0, 0, 0);
+        state.current.fromTarget.copy(targetNow);
         state.current.toTarget.set(
           target.x as number,
           target.y as number,
@@ -157,9 +153,10 @@ function CameraTween({
     const k = Math.min(1, s.t / s.dur);
     const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
     camera.position.lerpVectors(s.fromPos, s.toPos, e);
-    if (controlsRef.current) {
-      controlsRef.current.target.lerpVectors(s.fromTarget, s.toTarget, e);
-      controlsRef.current.update();
+    const ctrl = controlsRef.current;
+    if (ctrl) {
+      ctrl.target.lerpVectors(s.fromTarget, s.toTarget, e);
+      ctrl.update();
     }
     if (k >= 1) s.active = false;
   });
@@ -170,11 +167,12 @@ const toV3 = (v?: Vec3) => new THREE.Vector3(v?.x ?? 0, v?.y ?? 0, v?.z ?? 0);
 
 /* ---------- Component ---------- */
 type ViewKey = "front" | "side" | "back" | "interior" | "full";
-type Props = { garagePath?: string };
+type ViewsMap = Record<
+  Exclude<ViewKey, "full">,
+  { pos: THREE.Vector3; target: THREE.Vector3 } | null
+>;
 
-export default function GarageShowcase({
-  garagePath = "/garage_scene/scene.gltf",
-}: Props) {
+export default function Page() {
   const { id: routeId } = useParams<{ id?: string }>();
   const idNum = useMemo(() => Number(routeId), [routeId]);
 
@@ -183,7 +181,7 @@ export default function GarageShowcase({
     [idNum]
   );
 
-  const controlsRef = useRef<any>(null);
+  const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const apiRef = useRef<ViewApi | null>(null);
 
   // 初始视角（Full 返回点）
@@ -195,9 +193,8 @@ export default function GarageShowcase({
       const ctrl = controlsRef.current;
       if (ctrl) {
         const c = ctrl.object as THREE.PerspectiveCamera;
-        const t = ctrl.target as THREE.Vector3;
         initCamPos.current.copy(c.position);
-        initTarget.current.copy(t);
+        initTarget.current.copy(ctrl.target);
         return;
       }
       raf = requestAnimationFrame(probe);
@@ -206,36 +203,16 @@ export default function GarageShowcase({
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  // ✅ 预加载移到副作用，避免渲染期触发 Loader 状态更新
+  // 预加载放副作用
   useEffect(() => {
-    useGLTF.preload(garagePath);
-  }, [garagePath]);
+    useGLTF.preload("/garage_scene/scene.gltf");
+  }, []);
   useEffect(() => {
     if (car?.model) useGLTF.preload(car.model);
   }, [car?.model]);
 
-  // 键盘 P 打印相机
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === "p" && controlsRef.current) {
-        const c = controlsRef.current.object as THREE.PerspectiveCamera;
-        const t = controlsRef.current.target as THREE.Vector3;
-        console.log(
-          "pos:",
-          c.position.toArray(),
-          "target:",
-          t.toArray(),
-          "fov:",
-          c.fov
-        );
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
   // JSON -> THREE
-  const views = useMemo(() => {
+  const views: ViewsMap = useMemo(() => {
     const v = car.views ?? {};
     const build = (x?: ViewDef) =>
       x ? { pos: toV3(x.pos), target: toV3(x.target) } : null;
@@ -244,10 +221,7 @@ export default function GarageShowcase({
       side: build(v.side),
       back: build(v.back),
       interior: build(v.interior),
-    } as Record<
-      Exclude<ViewKey, "full">,
-      { pos: THREE.Vector3; target: THREE.Vector3 } | null
-    >;
+    };
   }, [car]);
 
   const go = (k: ViewKey) => {
@@ -255,7 +229,7 @@ export default function GarageShowcase({
       apiRef.current?.goTo(initCamPos.current, initTarget.current, 0.8);
       return;
     }
-    const view = (views as any)[k];
+    const view = views[k as Exclude<ViewKey, "full">];
     if (!view) return;
     apiRef.current?.goTo(view.pos, view.target, 0.8);
   };
@@ -312,7 +286,8 @@ export default function GarageShowcase({
       <div className="absolute bottom-5 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/10 bg-black/60 p-1 backdrop-blur">
         <div className="flex gap-1">
           {buttons.map(({ key, label }) => {
-            const disabled = key === "full" ? false : !(views as any)[key];
+            const disabled =
+              key === "full" ? false : !views[key as Exclude<ViewKey, "full">];
             return (
               <button
                 key={key}
@@ -338,7 +313,7 @@ export default function GarageShowcase({
         gl={{ antialias: true }}
       >
         <Suspense fallback={null}>
-          <Garage path={garagePath} />
+          <Garage path={"/garage_scene/scene.gltf"} />
 
           <Environment preset="studio" background={false} />
           <ambientLight intensity={0.25} />
@@ -348,10 +323,10 @@ export default function GarageShowcase({
           <Car
             key={car.model}
             path={car.model}
-            x={car.car_init_position?.position.x ?? -2.2}
-            y={car.car_init_position?.position.y ?? 0}
-            z={car.car_init_position?.position.z ?? 0}
-            scale={car.car_init_position?.scale ?? 90}
+            x={initPos.x}
+            y={initPos.y}
+            z={initPos.z}
+            scale={initScale}
           />
 
           <ContactShadows
@@ -361,8 +336,6 @@ export default function GarageShowcase({
             blur={2}
             far={2}
           />
-
-          {/* 可选：预加载 Canvas 内资源 */}
           <Preload all />
         </Suspense>
 
