@@ -1,5 +1,7 @@
 "use client";
 
+// import react
+import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { HeaderLinks } from "./HeaderLinks";
@@ -103,10 +105,12 @@ export default function Header() {
   };
 
   return (
-    <div className="relative z-50 flex w-full items-center justify-between px-20 py-5">
+    <div className="h-[80px] relative z-50 flex w-full items-center justify-between px-20">
       {/* Logo */}
       <div>
-        <h1 className="font-bungee text-2xl">MINI GARAGE</h1>
+        <Link href={"/"} className="font-bungee text-2xl">
+          MINI GARAGE
+        </Link>
       </div>
 
       {/* Links */}

@@ -1,6 +1,13 @@
 "use client";
 
+// import react
 import Image from "next/image";
+import Link from "next/link";
+
+// import data
+import CarData from "@/data/CarData.json";
+
+// import shadcn
 import { Button } from "./ui/button";
 
 type CartItem = {
@@ -44,37 +51,6 @@ function addToCart(p: { name: string; price_now: string; image: string }) {
   window.dispatchEvent(new CustomEvent("cart:updated", { detail: cart }));
 }
 
-const GiftData = [
-  {
-    name: "BMW E34",
-    price_now: "24",
-    price_was: "32",
-    discount: "25%",
-    image: "/gift_guide_image/bmw_e34.webp",
-  },
-  {
-    name: "BMW M3 E30",
-    price_now: "32",
-    price_was: "37",
-    discount: "30%",
-    image: "/gift_guide_image/bmw_m3_e30.webp",
-  },
-  {
-    name: "TOYOTA GR SUPRA",
-    price_now: "34",
-    price_was: "58",
-    discount: "40%",
-    image: "/gift_guide_image/toyota_gr_supra.webp",
-  },
-  {
-    name: "BMW M2 G87",
-    price_now: "41",
-    price_was: "58",
-    discount: "20%",
-    image: "/gift_guide_image/bmw_m2_g87.webp",
-  },
-];
-
 const GiftGuide = () => {
   return (
     <section className="w-full py-12">
@@ -84,9 +60,10 @@ const GiftGuide = () => {
         </h2>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {GiftData.map((item, i) => (
-            <div
-              key={i}
+          {CarData.map((item, i) => (
+            <Link
+              href={`/car/${item.id}`}
+              key={item.id}
               className="group rounded-2xl border border-[color:var(--foreground,_#fff)]/10 bg-white/5 p-3 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-[color:var(--foreground,_#01e4ee)]/30 hover:shadow-[0_20px_60px_-20px_rgba(1,228,238,0.35)]"
             >
               {/* image */}
@@ -142,7 +119,7 @@ const GiftGuide = () => {
                   </Button>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
