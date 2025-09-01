@@ -1,7 +1,8 @@
 // app/car/[id]/page.tsx
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import Image from "next/image";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import {
   useGLTF,
@@ -17,15 +18,93 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { useParams } from "next/navigation";
 import carsJson from "@/data/CarData.json";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Info } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
+/* ---------------- Breakpoint Hook ---------------- */
+type Breakpoint = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
+const QUERIES: Record<Exclude<Breakpoint, "xs">, string> = {
+  sm: "(min-width: 640px)",
+  md: "(min-width: 768px)",
+  lg: "(min-width: 1024px)",
+  xl: "(min-width: 1280px)",
+  "2xl": "(min-width: 1536px)",
+};
+
+export function useBreakpoint() {
+  const [matches, setMatches] = useState<Record<keyof typeof QUERIES, boolean>>(
+    { sm: false, md: false, lg: false, xl: false, "2xl": false }
+  );
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mqls = Object.fromEntries(
+      Object.entries(QUERIES).map(([k, q]) => [k, window.matchMedia(q)])
+    ) as Record<keyof typeof QUERIES, MediaQueryList>;
+
+    const update = () => {
+      setMatches({
+        sm: mqls.sm.matches,
+        md: mqls.md.matches,
+        lg: mqls.lg.matches,
+        xl: mqls.xl.matches,
+        "2xl": mqls["2xl"].matches,
+      });
+      setReady(true);
+    };
+    update();
+
+    const handlers: Record<
+      keyof typeof QUERIES,
+      (e: MediaQueryListEvent) => void
+    > = {
+      sm: update,
+      md: update,
+      lg: update,
+      xl: update,
+      "2xl": update,
+    };
+    (Object.keys(mqls) as Array<keyof typeof QUERIES>).forEach((key) =>
+      mqls[key].addEventListener("change", handlers[key])
+    );
+
+    return () => {
+      (Object.keys(mqls) as Array<keyof typeof QUERIES>).forEach((key) =>
+        mqls[key].removeEventListener("change", handlers[key])
+      );
+    };
+  }, []);
+
+  const bp: Breakpoint = useMemo(() => {
+    if (matches["2xl"]) return "2xl";
+    if (matches.xl) return "xl";
+    if (matches.lg) return "lg";
+    if (matches.md) return "md";
+    if (matches.sm) return "sm";
+    return "xs";
+  }, [matches]);
+
+  return { bp, ready, isMdUp: matches.md };
+}
+
 /* ---------------- Types ---------------- */
 type Vec3 = { x: number; y: number; z: number };
 type ViewDef = { pos: Vec3; target: Vec3 } | null;
+
 type CarItem = {
   id: number;
   name: string;
@@ -34,8 +113,30 @@ type CarItem = {
   discount: string;
   image: string;
   model: string;
+  content: {
+    overview: string;
+    specs: {
+      Color: string;
+      Material: string;
+      Weight: string;
+      Finish: string;
+      Length: string;
+      Width: string;
+      Height: string;
+      Wheelbase: string;
+    };
+  };
+  garage_init_position?: { position: Vec3; scale: number };
   car_init_position?: { position: Vec3; scale: number };
+  camera_init_position?: { position: Vec3; target?: Vec3; fov: number };
+  camera_init_position_mobile?: { position: Vec3; target?: Vec3; fov: number };
   views?: {
+    front?: ViewDef;
+    side?: ViewDef;
+    back?: ViewDef;
+    interior?: ViewDef;
+  };
+  views_mobile?: {
     front?: ViewDef;
     side?: ViewDef;
     back?: ViewDef;
@@ -44,7 +145,40 @@ type CarItem = {
 };
 const cars = carsJson as CarItem[];
 
-/* ---------- Loading Overlay ---------- */
+/* ---------------- Cart helpers ---------------- */
+type CartItem = {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  qty: number;
+};
+const CART_KEY = "cart";
+
+function readCart(): CartItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(CART_KEY);
+    return raw ? (JSON.parse(raw) as CartItem[]) : [];
+  } catch {
+    return [];
+  }
+}
+function writeCart(items: CartItem[]) {
+  localStorage.setItem(CART_KEY, JSON.stringify(items));
+}
+function addToCart(p: { name: string; price_now: string; image: string }) {
+  const cart = readCart();
+  const id = p.name;
+  const price = Number(p.price_now) || 0;
+  const idx = cart.findIndex((it) => it.id === id);
+  if (idx >= 0) cart[idx].qty += 1;
+  else cart.push({ id, name: p.name, price, image: p.image, qty: 1 });
+  writeCart(cart);
+  window.dispatchEvent(new CustomEvent("cart:updated", { detail: cart }));
+}
+
+/* ---------------- Loading Overlay ---------------- */
 function LoadingCover() {
   const { progress, active } = useProgress();
   const pct = Math.min(100, Math.round(progress));
@@ -63,9 +197,15 @@ function LoadingCover() {
   );
 }
 
-/* ---------- Scene: Garage ---------- */
-function Garage({ path }: { path: string }) {
-  const { scene } = useGLTF(path);
+/* ---------------- Scene / Models ---------------- */
+function Garage(props: {
+  path: string;
+  x: number;
+  y: number;
+  z: number;
+  scale: number;
+}) {
+  const { scene } = useGLTF(props.path);
   useEffect(() => {
     scene.traverse((o: THREE.Object3D) => {
       if (o instanceof THREE.Mesh) {
@@ -78,10 +218,15 @@ function Garage({ path }: { path: string }) {
       }
     });
   }, [scene]);
-  return <primitive object={scene} position={[-5, 0, 0]} scale={1} />;
+  return (
+    <primitive
+      object={scene}
+      position={[props.x, props.y, props.z]}
+      scale={props.scale}
+    />
+  );
 }
 
-/* ---------- Model: Car ---------- */
 function Car(props: {
   path: string;
   x: number;
@@ -98,7 +243,7 @@ function Car(props: {
   );
 }
 
-/* ---------- Camera tween ---------- */
+/* ---------------- Camera Tween ---------------- */
 type ViewApi = {
   goTo: (
     pos: THREE.Vector3Like,
@@ -123,29 +268,25 @@ function CameraTween({
     fromTarget: new THREE.Vector3(),
     toTarget: new THREE.Vector3(),
   });
+
   useEffect(() => {
     apiRef.current = {
-      goTo: (pos, target, dur = 0.8) => {
+      goTo: (pos: THREE.Vector3Like, target: THREE.Vector3Like, dur = 0.8) => {
         state.current.active = true;
         state.current.t = 0;
         state.current.dur = dur;
         state.current.fromPos.copy(camera.position);
-        state.current.toPos.set(
-          pos.x as number,
-          pos.y as number,
-          pos.z as number
-        );
+        // ✅ 不要用 any，一律用 Vector3Like 的 x/y/z
+        state.current.toPos.set(pos.x, pos.y, pos.z);
+
         const targetNow =
           controlsRef.current?.target ?? new THREE.Vector3(0, 0, 0);
         state.current.fromTarget.copy(targetNow);
-        state.current.toTarget.set(
-          target.x as number,
-          target.y as number,
-          target.z as number
-        );
+        state.current.toTarget.set(target.x, target.y, target.z);
       },
     };
   }, [camera, controlsRef, apiRef]);
+
   useFrame((_, d) => {
     const s = state.current;
     if (!s.active) return;
@@ -165,7 +306,7 @@ function CameraTween({
 
 const toV3 = (v?: Vec3) => new THREE.Vector3(v?.x ?? 0, v?.y ?? 0, v?.z ?? 0);
 
-/* ---------- Component ---------- */
+/* ---------------- Page ---------------- */
 type ViewKey = "front" | "side" | "back" | "interior" | "full";
 type ViewsMap = Record<
   Exclude<ViewKey, "full">,
@@ -173,37 +314,65 @@ type ViewsMap = Record<
 >;
 
 export default function Page() {
+  const [active, setActive] = useState<ViewKey>("full");
   const { id: routeId } = useParams<{ id?: string }>();
   const idNum = useMemo(() => Number(routeId), [routeId]);
+  const { ready, isMdUp } = useBreakpoint();
 
   const car = useMemo<CarItem>(
     () => cars.find((c) => Number(c.id) === idNum) ?? cars[0],
     [idNum]
   );
 
+  // —— 选择当前使用的相机与视图（首屏统一按桌面，避免水合差异）——
+  const isMobile = ready ? !isMdUp : false;
+
+  const camDef = useMemo(
+    () =>
+      isMobile
+        ? car.camera_init_position_mobile ?? car.camera_init_position
+        : car.camera_init_position,
+    [isMobile, car.camera_init_position, car.camera_init_position_mobile]
+  );
+
+  const viewSource = useMemo(
+    () => (isMobile ? car.views_mobile : car.views) ?? {},
+    [isMobile, car.views, car.views_mobile]
+  );
+
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const apiRef = useRef<ViewApi | null>(null);
 
-  // 初始视角（Full 返回点）
-  const initCamPos = useRef(new THREE.Vector3(4.42, 1.49, -3.99));
-  const initTarget = useRef(new THREE.Vector3(0, 0, 0));
+  // 初始“FULL”返回点（随 car / 断点变更更新）
+  const initCamPos = useRef(toV3(camDef?.position));
+  const initTarget = useRef(toV3(camDef?.target ?? { x: 0, y: 0, z: 0 }));
   useEffect(() => {
-    let raf = 0;
-    const probe = () => {
-      const ctrl = controlsRef.current;
-      if (ctrl) {
-        const c = ctrl.object as THREE.PerspectiveCamera;
-        initCamPos.current.copy(c.position);
-        initTarget.current.copy(ctrl.target);
-        return;
+    initCamPos.current = toV3(camDef?.position);
+    initTarget.current = toV3(camDef?.target ?? { x: 0, y: 0, z: 0 });
+    setActive("full");
+  }, [car.id, isMobile, camDef]);
+
+  // 可选：记录当前相机/目标（便于调试）
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === "p" && controlsRef.current) {
+        const c = controlsRef.current.object as THREE.PerspectiveCamera;
+        const t = controlsRef.current.target as THREE.Vector3;
+        console.log(
+          "pos:",
+          c.position.toArray(),
+          "target:",
+          t.toArray(),
+          "fov:",
+          c.fov
+        );
       }
-      raf = requestAnimationFrame(probe);
     };
-    probe();
-    return () => cancelAnimationFrame(raf);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // 预加载放副作用
+  // 预加载
   useEffect(() => {
     useGLTF.preload("/garage_scene/scene.gltf");
   }, []);
@@ -211,26 +380,27 @@ export default function Page() {
     if (car?.model) useGLTF.preload(car.model);
   }, [car?.model]);
 
-  // JSON -> THREE
+  // JSON -> THREE（按当前 viewSource）
   const views: ViewsMap = useMemo(() => {
-    const v = car.views ?? {};
     const build = (x?: ViewDef) =>
       x ? { pos: toV3(x.pos), target: toV3(x.target) } : null;
     return {
-      front: build(v.front),
-      side: build(v.side),
-      back: build(v.back),
-      interior: build(v.interior),
+      front: build(viewSource.front),
+      side: build(viewSource.side),
+      back: build(viewSource.back),
+      interior: build(viewSource.interior),
     };
-  }, [car]);
+  }, [viewSource]);
 
   const go = (k: ViewKey) => {
     if (k === "full") {
+      setActive("full");
       apiRef.current?.goTo(initCamPos.current, initTarget.current, 0.8);
       return;
     }
     const view = views[k as Exclude<ViewKey, "full">];
     if (!view) return;
+    setActive(k);
     apiRef.current?.goTo(view.pos, view.target, 0.8);
   };
 
@@ -242,78 +412,314 @@ export default function Page() {
     { key: "interior", label: "INTERIOR" },
   ];
 
-  const initPos = car.car_init_position?.position ?? { x: -2.2, y: 0, z: 0 };
-  const initScale = car.car_init_position?.scale ?? 90;
+  const initGaragePos = car.garage_init_position?.position ?? {
+    x: 0,
+    y: 0,
+    z: 0,
+  };
+  const initGarageScale = car.garage_init_position?.scale ?? 1;
+  const initCarPos = car.car_init_position?.position ?? { x: 0, y: 0, z: 0 };
+  const initCarScale = car.car_init_position?.scale ?? 1;
 
-  return (
-    <div className="relative h-[calc(100vh-80px)] w-full bg-black">
-      <LoadingCover />
-
-      {/* 右上信息 */}
-      <div className="pointer-events-none absolute inset-0 z-10 flex items-start justify-end p-6">
-        <div className="pointer-events-auto mt-4 mr-4 w-[600px] rounded-2xl border border-white/10 bg-black/60 p-4 backdrop-blur">
-          <div className="flex flex-col gap-5">
-            <div className="flex-1">
-              <h3 className="text-2xl font-semibold text-white">{car.name}</h3>
-              <div className="mt-1 flex flex-wrap items-baseline gap-2">
-                <span className="text-2xl font-bold text-white">
-                  ${car.price_now}
-                </span>
-                <span className="text-sm text-white/60 line-through">
-                  ${car.price_was}
-                </span>
-                <span className="ml-auto rounded-full border border-[#01e4ee]/50 bg-[#01e4ee]/10 px-2 py-0.5 text-[11px] font-medium text-[#01e4ee]">
-                  Save {car.discount}
-                </span>
-              </div>
-            </div>
-            <div className="text-[var(--text)]">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="item-1">
-                  <AccordionTrigger>Specs</AccordionTrigger>
-                  <AccordionContent>Engine, wheels, interior…</AccordionContent>
-                </AccordionItem>
-              </Accordion>
+  function CarInfoPanel({ containerClass = "" }: { containerClass?: string }) {
+    return (
+      <div
+        className={[
+          "rounded-2xl border border-white/10 bg-black/60 pt-0 md:pt-4 p-4 backdrop-blur",
+          containerClass,
+        ].join(" ")}
+      >
+        <div className="flex flex-col gap-1 md:gap-5">
+          <div className="flex-1 space-y-2">
+            <h3 className="hidden md:inline text-2xl md:text-4xl font-black font-montserrat text-white">
+              {car.name}
+            </h3>
+            <div className="mt-1 flex flex-wrap items-baseline gap-2">
+              <span className="text-2xl md:text-3xl font-bold text-white">
+                ${car.price_now}
+              </span>
+              <span className="text-xl text-white/60 line-through">
+                ${car.price_was}
+              </span>
+              <span className="ml-auto rounded-full border border-[#01e4ee]/50 bg-[#01e4ee]/10 px-2 py-0.5 text-lg md:text-xl font-medium text-[#01e4ee]">
+                Save {car.discount}
+              </span>
             </div>
           </div>
-          <button className="mt-4 w-full rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm text-white transition hover:border-[#01e4ee]/50 hover:bg-[#01e4ee]/20">
-            Add to cart
-          </button>
-        </div>
-      </div>
 
-      {/* 视角切换 */}
-      <div className="absolute bottom-5 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/10 bg-black/60 p-1 backdrop-blur">
-        <div className="flex gap-1">
-          {buttons.map(({ key, label }) => {
-            const disabled =
-              key === "full" ? false : !views[key as Exclude<ViewKey, "full">];
-            return (
-              <button
-                key={key}
-                onClick={() => go(key)}
-                disabled={disabled}
-                className={`rounded-full px-3 py-1.5 text-xs ${
-                  disabled
-                    ? "cursor-not-allowed opacity-40 text-white/60"
-                    : "text-white/90 hover:bg-white/10"
-                }`}
-              >
-                {label}
-              </button>
+          <div className="text-[var(--text)]">
+            <Accordion
+              type="single"
+              collapsible
+              defaultValue="specs"
+              className="text-white/90"
+            >
+              <AccordionItem value="specs">
+                <AccordionTrigger>Specs</AccordionTrigger>
+                <AccordionContent>
+                  <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                    <div>
+                      <dt className="text-white/60">Color</dt>
+                      <dd className="font-medium">
+                        {car.content?.specs?.Color ?? "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-white/60">Material</dt>
+                      <dd className="font-medium">
+                        {car.content?.specs?.Material ?? "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-white/60">Weight</dt>
+                      <dd className="font-medium">
+                        {car.content?.specs?.Weight ?? "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-white/60">Finish</dt>
+                      <dd className="font-medium">
+                        {car.content?.specs?.Finish ?? "—"}
+                      </dd>
+                    </div>
+
+                    <div className="col-span-2 mt-2 border-t border-white/10 pt-2 grid grid-cols-4 gap-2">
+                      <div>
+                        <dt className="text-white/60 text-xs">Length</dt>
+                        <dd className="font-medium">
+                          {car.content?.specs?.Length ?? "—"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-white/60 text-xs">Width</dt>
+                        <dd className="font-medium">
+                          {car.content?.specs?.Width ?? "—"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-white/60 text-xs">Height</dt>
+                        <dd className="font-medium">
+                          {car.content?.specs?.Height ?? "—"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-white/60 text-xs">Wheelbase</dt>
+                        <dd className="font-medium">
+                          {car.content?.specs?.Wheelbase ?? "—"}
+                        </dd>
+                      </div>
+                    </div>
+                  </dl>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="overview">
+                <AccordionTrigger>Overview</AccordionTrigger>
+                <AccordionContent>
+                  <p className="leading-relaxed text-white/70">
+                    {car.content?.overview ?? "—"}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="shipping">
+                <AccordionTrigger>Shipping & Returns</AccordionTrigger>
+                <AccordionContent>
+                  <ul className="list-disc pl-5 space-y-1 text-white/75 text-sm">
+                    <li>In-stock items ship within 24-48 hours</li>
+                    <li>
+                      Pre-order items ship per the ETA on the product page
+                    </li>
+                    <li>7-day no-reason return policy</li>
+                    <li>
+                      Shipping fees shown at checkout; free shipping in select
+                      regions
+                    </li>
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="warranty">
+                <AccordionTrigger>Warranty</AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-white/75 text-sm">
+                    12-month limited warranty. Free replacement/repair for
+                    non-human damage.
+                  </p>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        </div>
+
+        <Button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            addToCart(car);
+            toast(
+              <div className="flex justift-between items-center gap-3">
+                <Image
+                  src={car.image}
+                  alt={car.name}
+                  width={100}
+                  height={100}
+                  className="rounded-md object-contain"
+                />
+                <div className="space-y-0.5 text-black">
+                  <p className="font-medium">Added to cart</p>
+                  <p className="text-base">
+                    {car.name} • <span className="pr-1">${car.price_now}</span>
+                    <span className="line-through">${car.price_was}</span>
+                  </p>
+                </div>
+              </div>,
+              { duration: 3000 }
             );
-          })}
+          }}
+          type="button"
+          className="mt-4 w-full rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm transition hover:border-[#01e4ee]/50 hover:bg-[#01e4ee]/20"
+          aria-label={`Add ${car.name}`}
+        >
+          Add to cart
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative h-[100vh] w-full bg-black overflow-hidden">
+      <LoadingCover />
+
+      {/* 桌面版：右上信息固定显示（md+） */}
+      <div className="hidden md:block">
+        <div className="pointer-events-none absolute inset-0 z-20 flex items-start justify-end p-6 top-[100px]">
+          <CarInfoPanel containerClass="pointer-events-auto w-[600px]" />
         </div>
       </div>
 
-      {/* Canvas */}
+      {/* Bottom actions (mobile-friendly) */}
+      <div
+        className="absolute inset-x-0 bottom-0 z-20 px-3 sm:px-4"
+        style={{
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
+        }}
+      >
+        <div className="mx-auto w-full max-w-[720px] space-y-2 sm:space-y-3">
+          <div className="flex md:hidden items-center gap-2 sm:gap-3">
+            <Button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                addToCart(car);
+                toast(
+                  <div className="flex items-center gap-3">
+                    <Image
+                      src={car.image}
+                      alt={car.name}
+                      width={72}
+                      height={72}
+                      className="rounded-md object-contain"
+                    />
+                    <div className="space-y-0.5 text-black">
+                      <p className="font-medium">Added to cart</p>
+                      <p className="text-base">
+                        {car.name} •{" "}
+                        <span className="pr-1">${car.price_now}</span>
+                        <span className="line-through">${car.price_was}</span>
+                      </p>
+                    </div>
+                  </div>,
+                  { duration: 3000 }
+                );
+              }}
+              className="flex-1 rounded-xl border border-white/15 bg-black/60 backdrop-blur h-[clamp(44px,6.5vw,52px)] text-[clamp(13px,3.2vw,15px)]"
+            >
+              Add to cart
+            </Button>
+
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button
+                  className={`
+                    shrink-0 rounded-full border border-white/15 bg-black/60 backdrop-blur 
+                    h-[clamp(44px,6.5vw,52px)] w-[clamp(44px,6.5vw,52px)] flex items-center 
+                    justify-center shadow-lg active:scale-95 transition
+                    `}
+                  aria-label="Show car details"
+                  title="Details"
+                >
+                  <Info className="h-[clamp(18px,4vw,20px)] w-[clamp(18px,4vw,20px)] text-white" />
+                </Button>
+              </SheetTrigger>
+
+              <SheetContent
+                side="bottom"
+                className="h-[80vh] p-4 bg-black/80 border-white/10 backdrop-blur overflow-y-auto"
+              >
+                <SheetHeader>
+                  <SheetTitle className="font-montserrat text-2xl">
+                    {car.name}
+                  </SheetTitle>
+                </SheetHeader>
+                <CarInfoPanel containerClass="w-full border-0 bg-transparent p-0 backdrop-blur-0" />
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          {/* 视角切换 */}
+          <div className="flex justify-center">
+            <div className="rounded-full border border-white/10 bg-black/60 backdrop-blur shadow-[0_10px_40px_-10px_rgba(1,228,238,0.25)]">
+              <div className="flex gap-1 overflow-x-auto no-scrollbar whitespace-nowrap px-1 py-1">
+                {buttons.map(({ key, label }) => {
+                  const disabled =
+                    key !== "full" && !views[key as Exclude<ViewKey, "full">];
+                  const isActive = active === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => go(key)}
+                      disabled={disabled}
+                      aria-pressed={isActive}
+                      className={[
+                        "rounded-full border transition",
+                        "px-[clamp(10px,3.4vw,14px)] py-[clamp(6px,1.9vw,8px)]",
+                        "text-[clamp(11px,3.1vw,12px)]",
+                        disabled
+                          ? "cursor-not-allowed opacity-40 text-white/60 border-transparent"
+                          : isActive
+                          ? "text-[#01e4ee] border-[#01e4ee]/60 bg-[#01e4ee]/15 shadow-[0_0_0_1px_rgba(1,228,238,0.15)_inset]"
+                          : "text-white/90 hover:bg-white/10 border-transparent",
+                      ].join(" ")}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Canvas：随着 car 或断点变化重建，应用对应的初始相机 */}
       <Canvas
-        camera={{ position: [4.42, 1.49, -3.99], fov: 45 }}
+        key={`${car.id}-${isMobile ? "m" : "d"}`}
+        camera={{
+          position: toV3(camDef?.position),
+          fov: camDef?.fov ?? 45,
+        }}
         shadows
         gl={{ antialias: true }}
       >
         <Suspense fallback={null}>
-          <Garage path={"/garage_scene/scene.gltf"} />
+          <Garage
+            path={"/garage_scene/scene.gltf"}
+            x={initGaragePos.x}
+            y={initGaragePos.y}
+            z={initGaragePos.z}
+            scale={initGarageScale}
+          />
 
           <Environment preset="studio" background={false} />
           <ambientLight intensity={0.25} />
@@ -323,10 +729,10 @@ export default function Page() {
           <Car
             key={car.model}
             path={car.model}
-            x={initPos.x}
-            y={initPos.y}
-            z={initPos.z}
-            scale={initScale}
+            x={initCarPos.x}
+            y={initCarPos.y}
+            z={initCarPos.z}
+            scale={initCarScale}
           />
 
           <ContactShadows
@@ -340,7 +746,9 @@ export default function Page() {
         </Suspense>
 
         <OrbitControls
+          key={`${car.id}-${isMobile ? "m" : "d"}`}
           ref={controlsRef}
+          target={toV3(camDef?.target ?? { x: 0, y: 0, z: 0 })}
           enablePan
           enableZoom
           minPolarAngle={Math.PI / 3}

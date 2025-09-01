@@ -9,11 +9,12 @@ import CarData from "@/data/CarData.json";
 
 // import shadcn
 import { Button } from "./ui/button";
+import { toast } from "sonner";
 
 type CartItem = {
-  id: string; // 用 name 充当 id（真实项目建议用 sku）
+  id: string;
   name: string;
-  price: number; // 单价（现价）
+  price: number;
   image: string;
   qty: number;
 };
@@ -59,7 +60,11 @@ const GiftGuide = () => {
           Gift Guide
         </h2>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div
+          className={`
+        grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 
+          `}
+        >
           {CarData.map((item, i) => (
             <Link
               href={`/car/${item.id}`}
@@ -111,7 +116,34 @@ const GiftGuide = () => {
                   </div>
 
                   <Button
-                    onClick={() => addToCart(item)}
+                    onClick={(e) => {
+                      e.preventDefault(); // 阻止 <Link> 导航
+                      e.stopPropagation(); // 阻止事件冒泡到 <Link>
+                      addToCart(item); // 只执行加购
+                      toast(
+                        <div className="flex justift-between items-center gap-3">
+                          <Image
+                            src={item.image}
+                            alt="BMW E34"
+                            width={100}
+                            height={100}
+                            className="rounded-md object-contain"
+                          />
+                          <div className="space-y-0.5 text-black">
+                            <p className="font-medium">Added to cart</p>
+                            <p className="text-base">
+                              {item.name} •{" "}
+                              <span className="pr-1">${item.price_now}</span>
+                              <span className="line-through">
+                                ${item.price_was}
+                              </span>
+                            </p>
+                          </div>
+                        </div>,
+                        { duration: 3000 }
+                      );
+                    }}
+                    type="button"
                     className="rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm transition hover:border-[#01e4ee]/50 hover:bg-[#01e4ee]/20"
                     aria-label={`Add ${item.name}`}
                   >

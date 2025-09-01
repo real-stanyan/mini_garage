@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Bungee } from "next/font/google";
+import { Geist, Geist_Mono, Bungee, Montserrat } from "next/font/google";
 import "./globals.css";
 
 // import components
 import Header from "@/components/Header";
+
+// import shadcn
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,6 +17,12 @@ const bungee = Bungee({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-bungee",
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-montserrat",
 });
 
 const geistMono = Geist_Mono({
@@ -34,10 +43,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${bungee.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`
+          ${bungee.variable} ${geistSans.variable} ${geistMono.variable} ${montserrat.variable}
+          antialiased
+          `}
       >
         <Header />
         {children}
+        <Toaster />
       </body>
     </html>
   );

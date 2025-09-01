@@ -7,49 +7,135 @@
     "discount": "25%",
     "image": "/gift_guide_image/bmw_e34.webp",
     "model": "/gift_guide_model/bmw_e34/scene.gltf",
-    "car_init_position": {
+    "content": {
+      "overview": "The BMW E34 (1987-1996) is the third generation of the 5 Series, known for its boxy yet timeless design, solid build quality, and balanced handling. Offered as both a sedan and a Touring wagon, it came with a wide range of engines from four-cylinders to straight-sixes and V8s, with the iconic M5 sitting at the top of the lineup. Today, the E34 is appreciated as a classic BMW that combines durability, driving pleasure, and strong tuning potential.",
+      "specs": {
+        "Color": "Black",
+        "Material": "Metal",
+        "Weight": "1.2kg",
+        "Finish": "Polished",
+        "Length": "26cm",
+        "Width": "10cm",
+        "Height": "7cm",
+        "Wheelbase": "15.3cm"
+      }
+    },
+    "garage_init_position": {
       "position": {
-        "x": 2.2,
+        "x": -5,
         "y": 0,
         "z": 0
       },
       "scale": 1
     },
+    "car_init_position": {
+      "position": {
+        "x": 2.8,
+        "y": 0,
+        "z": 0
+      },
+      "scale": 1
+    },
+    "camera_init_position": {
+      "position": {
+        "x": 7.63,
+        "y": 1.96,
+        "z": -5.74
+      },
+      "target": {
+        "x": -0.36,
+        "y": 0.24,
+        "z": -0.39
+      },
+      "fov": 45
+    },
+    "camera_init_position_mobile": {
+      "position": {
+        "x": 9.616,
+        "y": 1.868,
+        "z": -6.176
+      },
+      "target": {
+        "x": 2.59,
+        "y": 0.51,
+        "z": 0.116
+      },
+      "fov": 45
+    },
     "views": {
       "front": {
         "pos": {
-          "x": 1.9612902818243696,
-          "y": 0.9677213690581197,
-          "z": -4.527140552111203
+          "x": 2.5520712093221465,
+          "y": 1.219382023255317,
+          "z": -5.101456323833319
         },
         "target": {
-          "x": 1.1366511031668896,
-          "y": 0.3575172031089323,
-          "z": -0.36396356356851955
+          "x": 1.5012351886454445,
+          "y": 0.5076699183430139,
+          "z": -0.26421524941945224
         }
       },
       "side": {
         "pos": {
-          "x": 8.638501146702414,
-          "y": 1.4226457432935757,
-          "z": -0.3856732985165141
+          "x": 10.87,
+          "y": 2,
+          "z": -0.77
         },
         "target": {
-          "x": 1.2691971889356644,
-          "y": 0.3498537831041536,
-          "z": -1.5545729102357624
+          "x": 1.34,
+          "y": 0.61,
+          "z": -2.24
         }
       },
       "back": {
         "pos": {
-          "x": 2.5142284355901072,
-          "y": 1.0277914081825619,
-          "z": 4.440447941286143
+          "x": 3.13,
+          "y": 1.12,
+          "z": 5.17
         },
         "target": {
-          "x": 3.2109872770160006,
-          "y": 0.1539956516585386,
-          "z": -1.5968619710502254
+          "x": 4.22,
+          "y": 0.15,
+          "z": -1.48
+        }
+      },
+      "interior": null
+    },
+    "views_mobile": {
+      "front": {
+        "pos": {
+          "x": 2.81,
+          "y": 1.23,
+          "z": -5.25
+        },
+        "target": {
+          "x": 2.785,
+          "y": 0.459,
+          "z": 0.115
+        }
+      },
+      "side": {
+        "pos": {
+          "x": 13.118,
+          "y": 2.8,
+          "z": 0.148
+        },
+        "target": {
+          "x": 2.667,
+          "y": 0.13,
+          "z": 0.21
+        }
+      },
+      "back": {
+        "pos": {
+          "x": 2.665,
+          "y": 1.33,
+          "z": 5.8
+        },
+        "target": {
+          "x": 2.945,
+          "y": 0.258,
+          "z": -1.66
         }
       },
       "interior": null
@@ -62,7 +148,140 @@
     "price_was": "37",
     "discount": "30%",
     "image": "/gift_guide_image/bmw_m3_e30.webp",
-    "model": "/gift_guide_model/bmw_m3_e30/scene.gltf"
+    "model": "/gift_guide_model/bmw_m3_e30/scene.gltf",
+    "content": {
+      "overview": "The BMW M3 E30 (1986-1991) is the first-generation M3, developed as a homologation special for touring car racing. It featured a high-revving 2.3L inline-4 (S14 engine), lightweight construction, flared fenders, and track-focused suspension. Known for its razor-sharp handling and motorsport pedigree, the E30 M3 has become one of BMW’s most iconic and collectible performance cars.",
+      "specs": {
+        "Color": "Red",
+        "Material": "Metal",
+        "Weight": "1.1kg",
+        "Finish": "Matte",
+        "Length": "24.1cm",
+        "Width": "9.3cm",
+        "Height": "7.6cm",
+        "Wheelbase": "14.2cm"
+      }
+    },
+    "garage_init_position": {
+      "position": {
+        "x": 3,
+        "y": 0,
+        "z": 0
+      },
+      "scale": 1
+    },
+    "car_init_position": {
+      "position": {
+        "x": 2.8,
+        "y": 0.7,
+        "z": -1
+      },
+      "scale": 0.7
+    },
+    "camera_init_position": {
+      "position": {
+        "x": -1.49,
+        "y": 1.74,
+        "z": 5.73
+      },
+      "target": {
+        "x": 3.25,
+        "y": 0.82,
+        "z": 2.44
+      },
+      "fov": 45
+    },
+    "camera_init_position_mobile": {
+      "position": {
+        "x": 9.616,
+        "y": 1.868,
+        "z": -6.176
+      },
+      "target": {
+        "x": 2.59,
+        "y": 0.51,
+        "z": 0.116
+      },
+      "fov": 45
+    },
+    "views": {
+      "front": {
+        "pos": {
+          "x": 2.98,
+          "y": 1.16,
+          "z": 5.31
+        },
+        "target": {
+          "x": 3.62,
+          "y": 0.74,
+          "z": 2.41
+        }
+      },
+      "side": {
+        "pos": {
+          "x": -6.4,
+          "y": 2.24,
+          "z": 0.9
+        },
+        "target": {
+          "x": 3.6,
+          "y": 0.78,
+          "z": 2.72
+        }
+      },
+      "back": {
+        "pos": {
+          "x": 2.49,
+          "y": 1.35,
+          "z": -5.29
+        },
+        "target": {
+          "x": 1.04,
+          "y": 0.22,
+          "z": 2.44
+        }
+      },
+      "interior": null
+    },
+    "views_mobile": {
+      "front": {
+        "pos": {
+          "x": 2.81,
+          "y": 1.23,
+          "z": -5.25
+        },
+        "target": {
+          "x": 2.785,
+          "y": 0.459,
+          "z": 0.115
+        }
+      },
+      "side": {
+        "pos": {
+          "x": 13.118,
+          "y": 2.8,
+          "z": 0.148
+        },
+        "target": {
+          "x": 2.667,
+          "y": 0.13,
+          "z": 0.21
+        }
+      },
+      "back": {
+        "pos": {
+          "x": 2.665,
+          "y": 1.33,
+          "z": 5.8
+        },
+        "target": {
+          "x": 2.945,
+          "y": 0.258,
+          "z": -1.66
+        }
+      },
+      "interior": null
+    }
   },
   {
     "id": 3,
@@ -71,7 +290,151 @@
     "price_was": "58",
     "discount": "40%",
     "image": "/gift_guide_image/toyota_gr_supra.webp",
-    "model": "/gift_guide_model/toyota_gr_supra/scene.gltf"
+    "model": "/gift_guide_model/toyota_gr_supra/scene.gltf",
+    "content": {
+      "overview": "The Toyota GR Supra (A90/A91, launched in 2019) is a modern sports car developed in collaboration with BMW, sharing its platform with the BMW Z4. Powered by turbocharged inline-6 and inline-4 engines, it delivers sharp handling, rear-wheel drive dynamics, and a driver-focused cockpit. Blending Japanese design with German engineering, the GR Supra revives Toyota's iconic performance nameplate for a new generation.",
+      "specs": {
+        "Color": "Silver",
+        "Material": "Metal",
+        "Weight": "1.3kg",
+        "Finish": "Frosted",
+        "Length": "24.3cm",
+        "Width": "10.3cm",
+        "Height": "7.2cm",
+        "Wheelbase": "13.7cm"
+      }
+    },
+    "garage_init_position": {
+      "position": {
+        "x": 3,
+        "y": 0,
+        "z": 0
+      },
+      "scale": 1
+    },
+    "car_init_position": {
+      "position": {
+        "x": 2.8,
+        "y": 0,
+        "z": -1
+      },
+      "scale": 100
+    },
+    "camera_init_position": {
+      "position": {
+        "x": -0.81,
+        "y": 1.67,
+        "z": 4.06
+      },
+      "target": {
+        "x": 2.61,
+        "y": 1.04,
+        "z": 1.55
+      },
+      "fov": 45
+    },
+    "camera_init_position_mobile": {
+      "position": {
+        "x": 9.616,
+        "y": 1.868,
+        "z": -6.176
+      },
+      "target": {
+        "x": 2.59,
+        "y": 0.51,
+        "z": 0.116
+      },
+      "fov": 45
+    },
+    "views": {
+      "front": {
+        "pos": {
+          "x": 2.88,
+          "y": 1.25,
+          "z": 3.88
+        },
+        "target": {
+          "x": 3.43,
+          "y": 0.93,
+          "z": 1.77
+        }
+      },
+      "side": {
+        "pos": {
+          "x": -5.24,
+          "y": 2.18,
+          "z": -0.4
+        },
+        "target": {
+          "x": 3.31,
+          "y": 0.92,
+          "z": 1.27
+        }
+      },
+      "back": {
+        "pos": {
+          "x": 2.6,
+          "y": 1.27,
+          "z": -5.81
+        },
+        "target": {
+          "x": 1.07,
+          "y": 0.25,
+          "z": 1.13
+        }
+      },
+      "interior": {
+        "pos": {
+          "x": 2.82,
+          "y": 1.125,
+          "z": -2.18
+        },
+        "target": {
+          "x": 2.687,
+          "y": 0.55,
+          "z": 1.45
+        }
+      }
+    },
+    "views_mobile": {
+      "front": {
+        "pos": {
+          "x": 2.81,
+          "y": 1.23,
+          "z": -5.25
+        },
+        "target": {
+          "x": 2.785,
+          "y": 0.459,
+          "z": 0.115
+        }
+      },
+      "side": {
+        "pos": {
+          "x": 13.118,
+          "y": 2.8,
+          "z": 0.148
+        },
+        "target": {
+          "x": 2.667,
+          "y": 0.13,
+          "z": 0.21
+        }
+      },
+      "back": {
+        "pos": {
+          "x": 2.665,
+          "y": 1.33,
+          "z": 5.8
+        },
+        "target": {
+          "x": 2.945,
+          "y": 0.258,
+          "z": -1.66
+        }
+      },
+      "interior": null
+    }
   },
   {
     "id": 4,
@@ -80,6 +443,150 @@
     "price_was": "58",
     "discount": "20%",
     "image": "/gift_guide_image/bmw_m2_g87.webp",
-    "model": "/gift_guide_model/bmw_m2_g87/scene.gltf"
+    "model": "/gift_guide_model/bmw_m2_g87/scene.gltf",
+    "content": {
+      "overview": "The BMW M2 G87 (2023-now) is the second-generation M2, built on the G42 2 Series platform and powered by the 3.0L twin-turbo inline-six (S58) producing over 450 hp. It features rear-wheel drive, a choice of 6-speed manual or 8-speed automatic transmission, and wider, more aggressive bodywork. Combining compact proportions with modern M performance, the G87 is regarded as the purest driver's car in BMW's current M lineup.",
+      "specs": {
+        "Color": "Zandvoort Blue",
+        "Material": "Metal",
+        "Weight": "1kg",
+        "Finish": "Polished",
+        "Length": "25.4cm",
+        "Width": "10.5cm",
+        "Height": "7.8cm",
+        "Wheelbase": "15.3cm"
+      }
+    },
+    "garage_init_position": {
+      "position": {
+        "x": 3,
+        "y": 0,
+        "z": 0
+      },
+      "scale": 1
+    },
+    "car_init_position": {
+      "position": {
+        "x": 2.8,
+        "y": 0,
+        "z": -1
+      },
+      "scale": 100
+    },
+    "camera_init_position": {
+      "position": {
+        "x": -1.39,
+        "y": 1.81,
+        "z": 4.44
+      },
+      "target": {
+        "x": 2.7,
+        "y": 1.095,
+        "z": 1.636
+      },
+      "fov": 45
+    },
+    "camera_init_position_mobile": {
+      "position": {
+        "x": 9.616,
+        "y": 1.868,
+        "z": -6.176
+      },
+      "target": {
+        "x": 2.59,
+        "y": 0.51,
+        "z": 0.116
+      },
+      "fov": 45
+    },
+    "views": {
+      "front": {
+        "pos": {
+          "x": 2.88,
+          "y": 1.25,
+          "z": 3.88
+        },
+        "target": {
+          "x": 3.43,
+          "y": 0.93,
+          "z": 1.77
+        }
+      },
+      "side": {
+        "pos": {
+          "x": -5.24,
+          "y": 2.18,
+          "z": -0.4
+        },
+        "target": {
+          "x": 3.31,
+          "y": 0.92,
+          "z": 1.27
+        }
+      },
+      "back": {
+        "pos": {
+          "x": 2.6,
+          "y": 1.27,
+          "z": -5.81
+        },
+        "target": {
+          "x": 1.07,
+          "y": 0.25,
+          "z": 1.13
+        }
+      },
+      "interior": {
+        "pos": {
+          "x": 2.8,
+          "y": 1.28,
+          "z": -2.15
+        },
+        "target": {
+          "x": 2.566,
+          "y": 0.557,
+          "z": 1.446
+        }
+      }
+    },
+    "views_mobile": {
+      "front": {
+        "pos": {
+          "x": 2.81,
+          "y": 1.23,
+          "z": -5.25
+        },
+        "target": {
+          "x": 2.785,
+          "y": 0.459,
+          "z": 0.115
+        }
+      },
+      "side": {
+        "pos": {
+          "x": 13.118,
+          "y": 2.8,
+          "z": 0.148
+        },
+        "target": {
+          "x": 2.667,
+          "y": 0.13,
+          "z": 0.21
+        }
+      },
+      "back": {
+        "pos": {
+          "x": 2.665,
+          "y": 1.33,
+          "z": 5.8
+        },
+        "target": {
+          "x": 2.945,
+          "y": 0.258,
+          "z": -1.66
+        }
+      },
+      "interior": null
+    }
   }
 ]
