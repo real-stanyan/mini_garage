@@ -588,7 +588,7 @@ export default function Page() {
   }
 
   return (
-    <div className="relative h-[100vh] w-full bg-black overflow-hidden">
+    <div className="relative h-[100svh] w-full bg-black overflow-hidden">
       <LoadingCover />
 
       {/* 桌面版：右上信息固定显示（md+） */}
@@ -600,12 +600,19 @@ export default function Page() {
 
       {/* Bottom actions (mobile-friendly) */}
       <div
-        className="absolute inset-x-0 bottom-0 z-20 px-3 sm:px-4"
+        className="
+    fixed left-1/2 bottom-0 z-50 -translate-x-1/2
+    w-full max-w-[720px] px-3 sm:px-4
+    pointer-events-none
+  "
         style={{
-          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
+          // 兼容新旧 iOS 安全区：env + constant
+          paddingBottom:
+            "calc((env(safe-area-inset-bottom, 0px) + constant(safe-area-inset-bottom, 0px)) + 16px)",
         }}
       >
-        <div className="mx-auto w-full max-w-[720px] space-y-2 sm:space-y-3">
+        <div className="w-full space-y-2 sm:space-y-3 pointer-events-auto mx-auto">
+          {/* 顶行：加购 + 移动端信息气泡（仅在 md 以下显示） */}
           <div className="flex md:hidden items-center gap-2 sm:gap-3">
             <Button
               onClick={(e) => {
@@ -633,21 +640,27 @@ export default function Page() {
                   { duration: 3000 }
                 );
               }}
-              className="flex-1 rounded-xl border border-white/15 bg-black/60 backdrop-blur h-[clamp(44px,6.5vw,52px)] text-[clamp(13px,3.2vw,15px)]"
+              className="
+          flex-1 rounded-xl border border-white/15 bg-black/60 backdrop-blur
+          h-[clamp(44px,6.5vw,52px)]
+          text-[clamp(13px,3.2vw,15px)]
+        "
             >
               Add to cart
             </Button>
 
+            {/* 移动端详情气泡：Sheet */}
             <Sheet>
               <SheetTrigger asChild>
                 <Button
-                  className={`
-                    shrink-0 rounded-full border border-white/15 bg-black/60 backdrop-blur 
-                    h-[clamp(44px,6.5vw,52px)] w-[clamp(44px,6.5vw,52px)] flex items-center 
-                    justify-center shadow-lg active:scale-95 transition
-                    `}
+                  className="
+              shrink-0 rounded-full border border-white/15 bg-black/60 backdrop-blur
+              h-[clamp(44px,6.5vw,52px)] w-[clamp(44px,6.5vw,52px)]
+              flex items-center justify-center shadow-lg active:scale-95 transition
+            "
                   aria-label="Show car details"
                   title="Details"
+                  variant="ghost"
                 >
                   <Info className="h-[clamp(18px,4vw,20px)] w-[clamp(18px,4vw,20px)] text-white" />
                 </Button>
@@ -662,15 +675,21 @@ export default function Page() {
                     {car.name}
                   </SheetTitle>
                 </SheetHeader>
+                {/* 复用信息面板 */}
                 <CarInfoPanel containerClass="w-full border-0 bg-transparent p-0 backdrop-blur-0" />
               </SheetContent>
             </Sheet>
           </div>
 
-          {/* 视角切换 */}
+          {/* 视角切换：可横向滚动，保持可点触 */}
           <div className="flex justify-center">
-            <div className="rounded-full border border-white/10 bg-black/60 backdrop-blur shadow-[0_10px_40px_-10px_rgba(1,228,238,0.25)]">
-              <div className="flex gap-1 overflow-x-auto no-scrollbar whitespace-nowrap px-1 py-1">
+            <div
+              className="
+        rounded-full border border-white/10 bg-black/60 backdrop-blur
+        shadow-[0_10px_40px_-10px_rgba(1,228,238,0.25)]
+      "
+            >
+              <div className="flex gap-1 overflow-x-auto no-scrollbar whitespace-nowrap px-1 py-1 touch-pan-x">
                 {buttons.map(({ key, label }) => {
                   const disabled =
                     key !== "full" && !views[key as Exclude<ViewKey, "full">];

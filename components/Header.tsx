@@ -237,7 +237,7 @@ export default function Header() {
 
             {/* 右：购物车 */}
             <Sheet>
-              <SheetTrigger className="relative">
+              <SheetTrigger className="relative hidden md:block">
                 <ShoppingBag size={28} />
                 {/* 角标 */}
                 {count > 0 && (
