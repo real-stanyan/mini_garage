@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Bungee, Montserrat } from "next/font/google";
+import {
+  Geist,
+  Geist_Mono,
+  Bungee,
+  Montserrat,
+  Archivo_Black,
+} from "next/font/google";
 import "./globals.css";
 
 // import components
@@ -7,6 +13,13 @@ import Header from "@/components/Header";
 
 // import shadcn
 import { Toaster } from "@/components/ui/sonner";
+
+const archivoBlack = Archivo_Black({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+  variable: "--font-archivo-black",
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,7 +57,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`
-          ${bungee.variable} ${geistSans.variable} ${geistMono.variable} ${montserrat.variable}
+          ${bungee.variable} ${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${archivoBlack.variable}
           antialiased
           `}
       >

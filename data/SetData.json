@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "name": "Starter Set",
+    "price_now": "111",
+    "price_was": "185",
+    "discount": "40%",
+    "image": "/bundles_image/starter_set.webp"
+  },
+  {
+    "id": 2,
+    "name": "Cleaing Set",
+    "price_now": "59",
+    "price_was": "98",
+    "discount": "40%",
+    "image": "/bundles_image/cleaning_set.webp"
+  }
+]

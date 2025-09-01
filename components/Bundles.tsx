@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 // import data
-import CarData from "@/data/CarData.json";
+import SetData from "@/data/SetData.json";
 
 // import shadcn
 import { Button } from "./ui/button";
@@ -53,70 +53,23 @@ function addToCart(p: { name: string; price_now: string; image: string }) {
   window.dispatchEvent(new CustomEvent("cart:updated", { detail: cart }));
 }
 
-const GiftGuide = () => {
+const Bundles = () => {
   const [option, setOption] = useState("All");
 
   return (
-    <section className="relative w-full py-12 mt-10">
+    <section className="relative w-full py-12">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <h2 className="md:-ml-10 mb-6 text-4xl md:text-5xl font-archivo-black font-black tracking-wide text-[var(--foreground,_#fff)]">
-            Gift Guide
-          </h2>
-          <div className="flex gap-2 font-semibold text-md">
-            <div
-              className={`
-              rounded-full border transition px-[clamp(10px,3.4vw,14px)] py-[clamp(6px,1.9vw,8px)] cursor-pointer
-              ${
-                option === "All"
-                  ? "text-[#01e4ee] border-[#01e4ee]/60 bg-[#01e4ee]/15 shadow-[0_0_0_1px_rgba(1,228,238,0.15)_inset]"
-                  : "text-white/90 hover:bg-white/10 border-white/30"
-              }
-              
-              `}
-              onClick={() => setOption("All")}
-            >
-              All
-            </div>
-            <div
-              className={`
-              rounded-full border transition px-[clamp(10px,3.4vw,14px)] py-[clamp(6px,1.9vw,8px)] cursor-pointer
-              ${
-                option === "Under $30"
-                  ? "text-[#01e4ee] border-[#01e4ee]/60 bg-[#01e4ee]/15 shadow-[0_0_0_1px_rgba(1,228,238,0.15)_inset]"
-                  : "text-white/90 hover:bg-white/10 border-white/30"
-              }
-              
-              `}
-              onClick={() => setOption("Under $30")}
-            >
-              Under $30
-            </div>
-            <div
-              className={`
-              rounded-full border transition px-[clamp(10px,3.4vw,14px)] py-[clamp(6px,1.9vw,8px)] cursor-pointer
-              ${
-                option === "Accessories"
-                  ? "text-[#01e4ee] border-[#01e4ee]/60 bg-[#01e4ee]/15 shadow-[0_0_0_1px_rgba(1,228,238,0.15)_inset]"
-                  : "text-white/90 hover:bg-white/10 border-white/30"
-              }
-              
-              `}
-              onClick={() => setOption("Accessories")}
-            >
-              Accessories
-            </div>
-          </div>
-        </div>
+        <h2 className="text-center md:text-left md:-ml-10 mb-6 text-5xl font-archivo-black font-black tracking-wide text-[var(--foreground,_#fff)]">
+          Gift Guide
+        </h2>
 
         <div
           className={`
-        grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 
+        grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 
           `}
         >
-          {CarData.map((item, i) => (
-            <Link
-              href={`/car/${item.id}`}
+          {SetData.map((item, i) => (
+            <div
               key={item.id}
               className="group rounded-2xl border border-[color:var(--foreground,_#fff)]/10 bg-white/5 p-3 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-[color:var(--foreground,_#01e4ee)]/30 hover:shadow-[0_20px_60px_-20px_rgba(1,228,238,0.35)]"
             >
@@ -205,7 +158,7 @@ const GiftGuide = () => {
                   </Button>
                 </div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       </div>
@@ -213,4 +166,4 @@ const GiftGuide = () => {
   );
 };
 
-export default GiftGuide;
+export default Bundles;

@@ -337,7 +337,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`${glassSurfaceClasses} ${focusVisibleClasses} ${className}`}
+      className={`${glassSurfaceClasses} ${focusVisibleClasses} ${className} overflow-visible`}
       style={getContainerStyles()}
     >
       <svg

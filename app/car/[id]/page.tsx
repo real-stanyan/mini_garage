@@ -600,11 +600,11 @@ export default function Page() {
 
       {/* Bottom actions (mobile-friendly) */}
       <div
-        className="
-    fixed left-1/2 bottom-0 z-50 -translate-x-1/2
-    w-full max-w-[720px] px-3 sm:px-4
-    pointer-events-none
-  "
+        className={`
+        fixed left-1/2 bottom-5 z-50 -translate-x-1/2
+        w-full max-w-[720px] px-3 sm:px-4
+        pointer-events-none
+        `}
         style={{
           // 兼容新旧 iOS 安全区：env + constant
           paddingBottom:

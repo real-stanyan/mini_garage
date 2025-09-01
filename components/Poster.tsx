@@ -91,7 +91,7 @@ export default function Poster({
   const t = useCountdown(deadlineISO);
 
   return (
-    <div className="relative pt-[80px]">
+    <div className="relative h-[50vh] md:h-[60vh] p-5 md:p-0 pt-[60px] md:pt-[80px]">
       {/* ✅ Aurora 当独立背景层；不传 children；放到内容下层 */}
       <div className="absolute inset-0 z-0 pointer-events-none mix-blend-screen opacity-80">
         <Aurora
@@ -129,8 +129,14 @@ export default function Poster({
               <TimeBox label="SEC" value={t.seconds} />
             </div>
 
-            <p className="mt-6 text-sm text-white/80 tracking-wide">
-              LIMITED-TIME HOLIDAY SALE • ENDS {formatDeadline(deadlineISO)}
+            <p className="hidden md:inline mt-6 text-sm text-white/80 tracking-wide">
+              LIMITED-TIME HOLIDAY SALE • ENDS 12/09/2025 AEST
+            </p>
+
+            <p className="inline md:hidden mt-6 text-sm text-white/80 tracking-wide">
+              LIMITED-TIME HOLIDAY SALE
+              <br />
+              ENDS 12/09/2025 AEST
             </p>
 
             <div className="mt-6 flex items-center gap-4">
@@ -147,7 +153,7 @@ export default function Poster({
           </div>
 
           {/* RIGHT */}
-          <div className="relative">
+          <div className="relative hidden md:block">
             <Canvas
               camera={{ position: [3.4, 1.6, 6.4], fov: 45 }}
               gl={{ alpha: true }}
