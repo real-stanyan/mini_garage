@@ -91,7 +91,7 @@ export default function Poster({
   const t = useCountdown(deadlineISO);
 
   return (
-    <div className="relative h-[50vh] md:h-[60vh] p-5 md:p-0 pt-[60px] md:pt-[80px]">
+    <div className="relative min-h-[560px] md:min-h-[580px] p-5 md:p-0 pt-[60px] md:pt-[80px] isolate">
       {/* ✅ Aurora 当独立背景层；不传 children；放到内容下层 */}
       <div className="absolute inset-0 z-0 pointer-events-none mix-blend-screen opacity-80">
         <Aurora

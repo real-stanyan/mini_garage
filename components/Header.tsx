@@ -13,17 +13,8 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Ellipsis } from "lucide-react";
-import { HeaderLinks } from "./HeaderLinks";
+import { ShoppingBag } from "lucide-react";
 import GlassSurface from "@/utils/GlassSurface";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 type Breakpoint = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
 
@@ -230,14 +221,9 @@ export default function Header() {
               MINI GARAGE
             </Link>
 
-            {/* 中：导航 */}
-            <div className="hidden md:block">
-              <HeaderLinks />
-            </div>
-
             {/* 右：购物车 */}
             <Sheet>
-              <SheetTrigger className="relative hidden md:block">
+              <SheetTrigger className="relative">
                 <ShoppingBag size={28} />
                 {/* 角标 */}
                 {count > 0 && (
@@ -249,90 +235,117 @@ export default function Header() {
 
               <SheetContent className="w-[420px] sm:w-[480px]">
                 <SheetHeader>
-                  <SheetTitle>Your Cart</SheetTitle>
-                  <SheetDescription>
+                  <SheetTitle className="font-archivo-black font-black text-3xl">
+                    Cart
+                  </SheetTitle>
+                  <SheetDescription className="text-xl">
                     {count} item{count !== 1 ? "s" : ""} • Subtotal{" "}
                     {fmt.format(subtotal)}
                   </SheetDescription>
                 </SheetHeader>
 
-                {/* 列表…（保留你原来的） */}
-                {/* … */}
-                <SheetFooter className="mt-6">
+                {/* Cart items */}
+                <div className="mt-4 flex-1 overflow-y-auto px-4">
+                  {items.length === 0 ? (
+                    <div className="flex h-[40vh] flex-col items-center justify-center text-center text-white/70">
+                      <ShoppingBag size={36} className="mb-2 opacity-80" />
+                      <p className="text-sm">Your cart is empty.</p>
+                      <p className="text-xs text-white/50">
+                        Add something you like!
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="max-h-[50vh] overflow-y-auto">
+                      <ul className="space-y-4 w-full">
+                        {items.map((it) => (
+                          <li
+                            key={it.id}
+                            className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-3"
+                          >
+                            {/* Thumb */}
+                            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-black/30">
+                              {/* 不依赖 next/image，避免额外 import */}
+                              <img
+                                src={it.image}
+                                alt={it.name}
+                                className="h-full w-full object-contain"
+                              />
+                            </div>
+
+                            {/* Info + Actions */}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-3">
+                                <p className="truncate font-medium">
+                                  {it.name}
+                                </p>
+                                <button
+                                  onClick={() => removeItem(it.id)}
+                                  className="text-xs text-white/60 hover:text-white"
+                                  aria-label={`Remove ${it.name}`}
+                                >
+                                  Remove
+                                </button>
+                              </div>
+
+                              <div className="mt-2 flex items-center justify-between">
+                                {/* Qty controls */}
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => dec(it.id)}
+                                    className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/10 hover:bg-white/10"
+                                    aria-label={`Decrease ${it.name} quantity`}
+                                  >
+                                    -
+                                  </button>
+                                  <span className="w-8 text-center text-sm tabular-nums">
+                                    {it.qty}
+                                  </span>
+                                  <button
+                                    onClick={() => inc(it.id)}
+                                    className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/10 hover:bg-white/10"
+                                    aria-label={`Increase ${it.name} quantity`}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+
+                                {/* Line total */}
+                                <div className="text-sm font-semibold">
+                                  {fmt.format(it.price * it.qty)}
+                                </div>
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* SheetFooter */}
+                <SheetFooter className="mt-6 bg-[var(--foreground)]/80">
                   <div className="flex w-full items-center justify-between">
-                    <div className="text-sm text-white/80">
+                    <div className="text-md text-[var(--background)]">
                       Subtotal:&nbsp;
                       <span className="font-semibold">
                         {fmt.format(subtotal)}
                       </span>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" onClick={clearCart}>
+                      <Button
+                        onClick={clearCart}
+                        className="bg-[var(--background)]"
+                      >
                         Clear
                       </Button>
-                      <Button>Checkout</Button>
+                      <Button className="bg-[var(--background)]">
+                        Checkout
+                      </Button>
                     </div>
                   </div>
                 </SheetFooter>
               </SheetContent>
             </Sheet>
-
-            {/* 右：购物车 */}
-            <div className="flex gap-4 md:hidden">
-              <Sheet>
-                <SheetTrigger className="relative">
-                  <ShoppingBag size={28} />
-                  {/* 角标 */}
-                  {count > 0 && (
-                    <span className="absolute -right-2 -top-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#01e4ee] px-1 text-xs font-semibold text-black">
-                      {count}
-                    </span>
-                  )}
-                </SheetTrigger>
-
-                <SheetContent className="w-[420px] sm:w-[480px]">
-                  <SheetHeader>
-                    <SheetTitle>Your Cart</SheetTitle>
-                    <SheetDescription>
-                      {count} item{count !== 1 ? "s" : ""} • Subtotal{" "}
-                      {fmt.format(subtotal)}
-                    </SheetDescription>
-                  </SheetHeader>
-
-                  {/* 列表…（保留你原来的） */}
-                  {/* … */}
-                  <SheetFooter className="mt-6">
-                    <div className="flex w-full items-center justify-between">
-                      <div className="text-sm text-white/80">
-                        Subtotal:&nbsp;
-                        <span className="font-semibold">
-                          {fmt.format(subtotal)}
-                        </span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={clearCart}>
-                          Clear
-                        </Button>
-                        <Button>Checkout</Button>
-                      </div>
-                    </div>
-                  </SheetFooter>
-                </SheetContent>
-              </Sheet>
-              <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <Ellipsis size={30} />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Profile</DropdownMenuItem>
-                  <DropdownMenuItem>Billing</DropdownMenuItem>
-                  <DropdownMenuItem>Team</DropdownMenuItem>
-                  <DropdownMenuItem>Subscription</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
           </div>
         </GlassSurface>
       </header>

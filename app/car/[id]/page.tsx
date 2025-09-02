@@ -1,7 +1,5 @@
 // app/car/[id]/page.tsx
 "use client";
-
-import Image from "next/image";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import {
@@ -24,8 +22,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Info } from "lucide-react";
-import { toast } from "sonner";
+import { Info, Loader as LoaderIcon, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -33,6 +30,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+
+// Set Decoder
+useGLTF.setDecoderPath("/draco/");
 
 /* ---------------- Breakpoint Hook ---------------- */
 type Breakpoint = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
@@ -102,6 +102,7 @@ export function useBreakpoint() {
 }
 
 /* ---------------- Types ---------------- */
+type Status = 0 | 1 | 2;
 type Vec3 = { x: number; y: number; z: number };
 type ViewDef = { pos: Vec3; target: Vec3 } | null;
 
@@ -189,6 +190,9 @@ function LoadingCover() {
       }`}
     >
       <div className="flex flex-col items-center">
+        <h1 className="font-bungee text-lg md:text-2xl whitespace-nowrap">
+          MINI GARAGE
+        </h1>
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-[#01e4ee]" />
         <p className="mt-3 text-sm text-white/80">{pct}%</p>
         <p className="mt-1 text-xs text-white/60">Loading assets…</p>
@@ -314,10 +318,47 @@ type ViewsMap = Record<
 >;
 
 export default function Page() {
+  const [loading, setLoading] = useState(false);
+  const [addCartStatus, setAddCartStatus] = useState<Status>(0);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [active, setActive] = useState<ViewKey>("full");
   const { id: routeId } = useParams<{ id?: string }>();
   const idNum = useMemo(() => Number(routeId), [routeId]);
   const { ready, isMdUp } = useBreakpoint();
+
+  const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (loading) return;
+
+    setLoading(true);
+    setAddCartStatus(0);
+
+    try {
+      addToCart(car); // 成功
+      // toast.success(`${car.name} added`);
+      timers.current.push(
+        setTimeout(() => setAddCartStatus(1), 100), // 快速反馈
+        setTimeout(() => setAddCartStatus(0), 1800), // 恢复
+        setTimeout(() => setLoading(false), 400) // 结束loading
+      );
+    } catch (err) {
+      console.error(err);
+      setAddCartStatus(2);
+      // toast.error("Failed to add");
+      timers.current.push(
+        setTimeout(() => setAddCartStatus(0), 1800),
+        setTimeout(() => setLoading(false), 400)
+      );
+    }
+  };
+
+  const stateClass =
+    addCartStatus === 1
+      ? "bg-emerald-500 border-emerald-400 text-black hover:bg-emerald-500"
+      : addCartStatus === 2
+      ? "bg-rose-500 border-rose-400 text-white hover:bg-rose-500"
+      : "";
 
   const car = useMemo<CarItem>(
     () => cars.find((c) => Number(c.id) === idNum) ?? cars[0],
@@ -339,6 +380,8 @@ export default function Page() {
     () => (isMobile ? car.views_mobile : car.views) ?? {},
     [isMobile, car.views, car.views_mobile]
   );
+
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const apiRef = useRef<ViewApi | null>(null);
@@ -553,35 +596,36 @@ export default function Page() {
         </div>
 
         <Button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            addToCart(car);
-            toast(
-              <div className="flex justift-between items-center gap-3">
-                <Image
-                  src={car.image}
-                  alt={car.name}
-                  width={100}
-                  height={100}
-                  className="rounded-md object-contain"
-                />
-                <div className="space-y-0.5 text-black">
-                  <p className="font-medium">Added to cart</p>
-                  <p className="text-base">
-                    {car.name} • <span className="pr-1">${car.price_now}</span>
-                    <span className="line-through">${car.price_was}</span>
-                  </p>
-                </div>
-              </div>,
-              { duration: 3000 }
-            );
-          }}
+          onClick={handleAddToCart}
           type="button"
-          className="mt-4 w-full rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm transition hover:border-[#01e4ee]/50 hover:bg-[#01e4ee]/20"
+          disabled={loading}
+          aria-busy={loading}
+          className={`
+          mt-4 w-full rounded-xl border px-4 py-2 text-sm transition
+          disabled:opacity-60 disabled:cursor-not-allowed border-white/10
+        bg-white/10 hover:border-[#01e4ee]/50 hover:bg-[#01e4ee]/20
+          ${stateClass}
+        `}
           aria-label={`Add ${car.name}`}
         >
-          Add to cart
+          {loading ? (
+            <span className="inline-flex items-center gap-2 text-white">
+              <LoaderIcon size={18} className="animate-spin" />
+              Processing...
+            </span>
+          ) : addCartStatus === 1 ? (
+            <span className="inline-flex items-center gap-2 text-white">
+              <Check size={18} />
+              Added
+            </span>
+          ) : addCartStatus === 2 ? (
+            <span className="inline-flex items-center gap-2 text-white">
+              <X size={18} />
+              Failed
+            </span>
+          ) : (
+            "Add to cart"
+          )}
         </Button>
       </div>
     );
@@ -591,9 +635,9 @@ export default function Page() {
     <div className="relative h-[100svh] w-full bg-black overflow-hidden">
       <LoadingCover />
 
-      {/* 桌面版：右上信息固定显示（md+） */}
+      {/* info */}
       <div className="hidden md:block">
-        <div className="pointer-events-none absolute inset-0 z-20 flex items-start justify-end p-6 top-[100px]">
+        <div className="pointer-events-none absolute inset-0 z-20 flex items-start justify-end p-6 top-[120px] right-10">
           <CarInfoPanel containerClass="pointer-events-auto w-[600px]" />
         </div>
       </div>
@@ -613,56 +657,60 @@ export default function Page() {
       >
         <div className="w-full space-y-2 sm:space-y-3 pointer-events-auto mx-auto">
           {/* 顶行：加购 + 移动端信息气泡（仅在 md 以下显示） */}
-          <div className="flex md:hidden items-center gap-2 sm:gap-3">
+          <div className="flex md:hidden items-center gap-2 sm:gap-3 h-[50px]">
+            {/* Add to cart Button */}
             <Button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                addToCart(car);
-                toast(
-                  <div className="flex items-center gap-3">
-                    <Image
-                      src={car.image}
-                      alt={car.name}
-                      width={72}
-                      height={72}
-                      className="rounded-md object-contain"
-                    />
-                    <div className="space-y-0.5 text-black">
-                      <p className="font-medium">Added to cart</p>
-                      <p className="text-base">
-                        {car.name} •{" "}
-                        <span className="pr-1">${car.price_now}</span>
-                        <span className="line-through">${car.price_was}</span>
-                      </p>
-                    </div>
-                  </div>,
-                  { duration: 3000 }
-                );
-              }}
-              className="
-          flex-1 rounded-xl border border-white/15 bg-black/60 backdrop-blur
-          h-[clamp(44px,6.5vw,52px)]
-          text-[clamp(13px,3.2vw,15px)]
-        "
+              onClick={handleAddToCart}
+              type="button"
+              disabled={loading}
+              aria-busy={loading}
+              className={`
+            px-4 py-2 text-sm transition h-full
+            disabled:opacity-60 disabled:cursor-not-allowed flex-1 
+            rounded-xl border border-white/15 bg-black/60
+            ${stateClass}
+          `}
+              aria-label={`Add ${car.name}`}
             >
-              Add to cart
+              {loading ? (
+                <span className="inline-flex items-center gap-2 text-white">
+                  <LoaderIcon size={18} className="animate-spin" />
+                  Processing...
+                </span>
+              ) : addCartStatus === 1 ? (
+                <span className="inline-flex items-center gap-2 text-white">
+                  <Check size={18} />
+                  Added
+                </span>
+              ) : addCartStatus === 2 ? (
+                <span className="inline-flex items-center gap-2 text-white">
+                  <X size={18} />
+                  Failed
+                </span>
+              ) : (
+                "Add to cart"
+              )}
             </Button>
 
-            {/* 移动端详情气泡：Sheet */}
+            {/* Info Button */}
             <Sheet>
               <SheetTrigger asChild>
                 <Button
                   className="
               shrink-0 rounded-full border border-white/15 bg-black/60 backdrop-blur
-              h-[clamp(44px,6.5vw,52px)] w-[clamp(44px,6.5vw,52px)]
-              flex items-center justify-center shadow-lg active:scale-95 transition
+              h-full w-[clamp(88px,13vw,104px)]
+              flex items-center justify-center shadow-lg active:scale-95 transition group
             "
                   aria-label="Show car details"
                   title="Details"
                   variant="ghost"
                 >
-                  <Info className="h-[clamp(18px,4vw,20px)] w-[clamp(18px,4vw,20px)] text-white" />
+                  <Info
+                    className={`
+                  h-[clamp(36px,8vw,40px)] w-[clamp(36px,8vw,40px)] text-white
+                  group-hover:text-black
+                    `}
+                  />
                 </Button>
               </SheetTrigger>
 
@@ -764,7 +812,7 @@ export default function Page() {
           <Preload all />
         </Suspense>
 
-        <OrbitControls
+        {/* <OrbitControls
           key={`${car.id}-${isMobile ? "m" : "d"}`}
           ref={controlsRef}
           target={toV3(camDef?.target ?? { x: 0, y: 0, z: 0 })}
@@ -774,6 +822,13 @@ export default function Page() {
           maxPolarAngle={Math.PI / 2.2}
           enableDamping
           dampingFactor={0.08}
+        /> */}
+        <OrbitControls
+          ref={controlsRef}
+          target={toV3(camDef?.target ?? { x: 0, y: 0, z: 0 })}
+          enableRotate={false}
+          enablePan={false}
+          enableZoom={false}
         />
         <CameraTween controlsRef={controlsRef} apiRef={apiRef} />
       </Canvas>
