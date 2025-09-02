@@ -1,6 +1,30 @@
 [
   {
     "id": 1,
+    "name": "Wax Set",
+    "price_now": "32",
+    "price_was": "54",
+    "discount": "40%",
+    "image": "/bundles_image/Wax_set.webp"
+  },
+  {
+    "id": 2,
+    "name": "Display Set",
+    "price_now": "61",
+    "price_was": "87",
+    "discount": "30%",
+    "image": "/bundles_image/Display_set.webp"
+  },
+  {
+    "id": 3,
+    "name": "Cleaing Set",
+    "price_now": "59",
+    "price_was": "98",
+    "discount": "40%",
+    "image": "/bundles_image/cleaning_set.webp"
+  },
+  {
+    "id": 4,
     "name": "Starter Set",
     "price_now": "111",
     "price_was": "185",
@@ -8,11 +32,19 @@
     "image": "/bundles_image/starter_set.webp"
   },
   {
-    "id": 2,
-    "name": "Cleaing Set",
-    "price_now": "59",
-    "price_was": "98",
-    "discount": "40%",
-    "image": "/bundles_image/cleaning_set.webp"
+    "id": 5,
+    "name": "Brush Set",
+    "price_now": "30",
+    "price_was": "38",
+    "discount": "20%",
+    "image": "/bundles_image/Brush_set.webp"
+  },
+  {
+    "id": 6,
+    "name": "Microfiber Pack",
+    "price_now": "22",
+    "price_was": "25",
+    "discount": "10%",
+    "image": "/bundles_image/Microfiber_pack.webp"
   }
 ]

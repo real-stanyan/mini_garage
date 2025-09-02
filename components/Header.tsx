@@ -2,6 +2,7 @@
 
 // import react
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import {
   Sheet,
@@ -15,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ShoppingBag } from "lucide-react";
 import GlassSurface from "@/utils/GlassSurface";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type Breakpoint = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
 
@@ -255,7 +257,7 @@ export default function Header() {
                       </p>
                     </div>
                   ) : (
-                    <div className="max-h-[50vh] overflow-y-auto">
+                    <ScrollArea className="h-full overflow-y-auto">
                       <ul className="space-y-4 w-full">
                         {items.map((it) => (
                           <li
@@ -264,9 +266,10 @@ export default function Header() {
                           >
                             {/* Thumb */}
                             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-black/30">
-                              {/* 不依赖 next/image，避免额外 import */}
-                              <img
+                              <Image
                                 src={it.image}
+                                width={200}
+                                height={200}
                                 alt={it.name}
                                 className="h-full w-full object-contain"
                               />
@@ -318,7 +321,7 @@ export default function Header() {
                           </li>
                         ))}
                       </ul>
-                    </div>
+                    </ScrollArea>
                   )}
                 </div>
 

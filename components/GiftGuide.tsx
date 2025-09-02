@@ -185,7 +185,6 @@ function AddButton({ item }: { item: Product }) {
 
 /* ---------- GiftGuide ---------- */
 const GiftGuide = () => {
-  const isMdUp = useIsMdUp();
   const [option, setOption] = useState("All");
   const FadeInYs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -212,7 +211,7 @@ const GiftGuide = () => {
 
   return (
     <section
-      className="w-full bg-[var(--background,_#000)] text-[var(--text,_#fff)] relative z-10"
+      className="w-full bg-[var(--background,_#000)] text-[var(--text,_#fff)] relative z-10 mb-20"
       ref={(el) => {
         if (el) FadeInYs.current[0] = el as HTMLDivElement;
       }}

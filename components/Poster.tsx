@@ -67,20 +67,6 @@ function CarModel({ path }: { path: string }) {
   );
 }
 
-function formatDeadline(deadlineISO: string) {
-  return new Intl.DateTimeFormat("en-AU", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "Australia/Sydney",
-  })
-    .format(new Date(deadlineISO))
-    .replace(",", "");
-}
-
 export default function Poster({
   deadlineISO,
   ctaText = "SHOP NOW",
