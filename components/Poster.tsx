@@ -1,4 +1,3 @@
-// components/Poster.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -78,7 +77,7 @@ export default function Poster({
 
   return (
     <div className="relative min-h-[560px] md:min-h-[580px] p-5 md:p-0 pt-[60px] md:pt-[80px] isolate">
-      {/* ✅ Aurora 当独立背景层；不传 children；放到内容下层 */}
+      {/* Aurora */}
       <div className="absolute inset-0 z-0 pointer-events-none mix-blend-screen opacity-80">
         <Aurora
           colorStops={["#3A29FF", "#FF94B4", "#FF3232"]}
@@ -87,8 +86,7 @@ export default function Poster({
           speed={0.5}
         />
       </div>
-
-      {/* ✅ 给 CSS 变量加兜底颜色，防止未定义导致看起来像“没显示” */}
+      {/* section */}
       <section className="w-full min-h-[560px] md:min-h-[580px] bg-[var(--background,_#000)] text-[var(--text,_#fff)]">
         <div className="mx-auto grid max-w-7xl grid-cols-1 md:grid-cols-2 p-6 md:p-10">
           {/* LEFT */}

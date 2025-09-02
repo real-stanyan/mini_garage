@@ -29,7 +29,7 @@ const QUERIES: Record<Exclude<Breakpoint, "xs">, string> = {
 };
 
 type CartItem = {
-  id: string; // 简化用 name，当作 id
+  id: string;
   name: string;
   price: number;
   image: string;
@@ -53,7 +53,6 @@ export function useBreakpoint() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // 建立每个断点的 mql 监听
     const mqls = Object.fromEntries(
       Object.entries(QUERIES).map(([k, q]) => [k, window.matchMedia(q)])
     ) as Record<keyof typeof QUERIES, MediaQueryList>;
@@ -71,7 +70,6 @@ export function useBreakpoint() {
 
     update();
 
-    // 监听变化
     const handlers = {} as Record<
       keyof typeof QUERIES,
       (e: MediaQueryListEvent) => void
@@ -88,7 +86,6 @@ export function useBreakpoint() {
     };
   }, []);
 
-  // 计算当前断点（取满足的最大一个；都不满足则为 xs）
   const bp: Breakpoint = useMemo(() => {
     if (matches["2xl"]) return "2xl";
     if (matches.xl) return "xl";
@@ -124,7 +121,6 @@ function readCart(): CartItem[] {
 
 function writeCart(items: CartItem[]) {
   localStorage.setItem(CART_KEY, JSON.stringify(items));
-  // 广播给其他组件（比如角标）
   window.dispatchEvent(new CustomEvent("cart:updated", { detail: items }));
 }
 
@@ -132,7 +128,6 @@ export default function Header() {
   const [items, setItems] = useState<CartItem[]>([]);
   const { ready, isMdUp } = useBreakpoint();
 
-  // 初始读取 + 监听两个事件：自定义(cart:updated) 和跨标签页(storage)
   useEffect(() => {
     setItems(readCart());
     const onUpdated = (e: Event) => {
@@ -150,7 +145,6 @@ export default function Header() {
     };
   }, []);
 
-  // 汇总
   const { count, subtotal } = useMemo(() => {
     const c = items.reduce((n, it) => n + it.qty, 0);
     const s = items.reduce((n, it) => n + it.qty * it.price, 0);
@@ -163,7 +157,7 @@ export default function Header() {
     []
   );
 
-  // 操作
+  // cart action
   const inc = (id: string) => {
     const next = items.map((it) =>
       it.id === id ? { ...it, qty: it.qty + 1 } : it
@@ -192,13 +186,12 @@ export default function Header() {
 
   return (
     <>
-      {/* 固定在顶部的外层容器 */}
       <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4">
-        {/* GlassSurface 作为“条形背景” */}
+        {/* GlassSurface */}
         <GlassSurface
-          width="100%" // 撑满可用宽度
+          width="100%"
           height={ready && isMdUp ? 80 : 60}
-          borderRadius={20} // 圆角
+          borderRadius={20}
           backgroundOpacity={0.18}
           saturation={1.4}
           blur={12}
@@ -206,16 +199,15 @@ export default function Header() {
           redOffset={0}
           greenOffset={8}
           blueOffset={16}
-          mixBlendMode="screen" // 比 difference 更自然的光泽
-          className="mx-auto max-w-7xl" // 中间定宽，可改成你需要的容器宽度
+          mixBlendMode="screen"
+          className="mx-auto max-w-7xl"
         >
-          {/* 真正的 Header 内容：高度用 h-full 对齐 GlassSurface */}
           <div
             className={`
             flex w-full h-full items-center justify-between px-2 md:px-6
             `}
           >
-            {/* 左：Logo */}
+            {/* left：Logo */}
             <Link
               href="/"
               className="font-bungee text-lg md:text-2xl whitespace-nowrap"
@@ -223,11 +215,11 @@ export default function Header() {
               MINI GARAGE
             </Link>
 
-            {/* 右：购物车 */}
+            {/* right：cart */}
             <Sheet>
               <SheetTrigger className="relative">
                 <ShoppingBag size={28} />
-                {/* 角标 */}
+                {/* count */}
                 {count > 0 && (
                   <span className="absolute -right-2 -top-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#01e4ee] px-1 text-xs font-semibold text-black">
                     {count}

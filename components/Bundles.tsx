@@ -1,4 +1,3 @@
-import React from "react";
 import MagicBento from "@/utils/MagicBento";
 
 const Bundles = () => {

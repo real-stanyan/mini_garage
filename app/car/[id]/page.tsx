@@ -1,6 +1,10 @@
-// app/car/[id]/page.tsx
 "use client";
+
+// import react
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useParams } from "next/navigation";
+
+// import three.js
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import {
   useGLTF,
@@ -13,8 +17,11 @@ import {
 } from "@react-three/drei";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-import { useParams } from "next/navigation";
+
+// import data
 import carsJson from "@/data/CarData.json";
+
+// import shadcn
 import {
   Sheet,
   SheetContent,
@@ -22,19 +29,21 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Info, Loader as LoaderIcon, Check, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+
+// import icons
+import { Info, Loader as LoaderIcon, Check, X } from "lucide-react";
 
 // Set Decoder
 useGLTF.setDecoderPath("/draco/");
 
-/* ---------------- Breakpoint Hook ---------------- */
+// Breakpoint Hook
 type Breakpoint = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
 const QUERIES: Record<Exclude<Breakpoint, "xs">, string> = {
   sm: "(min-width: 640px)",
@@ -280,7 +289,6 @@ function CameraTween({
         state.current.t = 0;
         state.current.dur = dur;
         state.current.fromPos.copy(camera.position);
-        // ✅ 不要用 any，一律用 Vector3Like 的 x/y/z
         state.current.toPos.set(pos.x, pos.y, pos.z);
 
         const targetNow =
@@ -335,17 +343,15 @@ export default function Page() {
     setAddCartStatus(0);
 
     try {
-      addToCart(car); // 成功
-      // toast.success(`${car.name} added`);
+      addToCart(car);
       timers.current.push(
-        setTimeout(() => setAddCartStatus(1), 100), // 快速反馈
-        setTimeout(() => setAddCartStatus(0), 1800), // 恢复
-        setTimeout(() => setLoading(false), 400) // 结束loading
+        setTimeout(() => setAddCartStatus(1), 100),
+        setTimeout(() => setAddCartStatus(0), 1800),
+        setTimeout(() => setLoading(false), 400)
       );
     } catch (err) {
       console.error(err);
       setAddCartStatus(2);
-      // toast.error("Failed to add");
       timers.current.push(
         setTimeout(() => setAddCartStatus(0), 1800),
         setTimeout(() => setLoading(false), 400)
@@ -365,7 +371,6 @@ export default function Page() {
     [idNum]
   );
 
-  // —— 选择当前使用的相机与视图（首屏统一按桌面，避免水合差异）——
   const isMobile = ready ? !isMdUp : false;
 
   const camDef = useMemo(
@@ -386,7 +391,6 @@ export default function Page() {
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const apiRef = useRef<ViewApi | null>(null);
 
-  // 初始“FULL”返回点（随 car / 断点变更更新）
   const initCamPos = useRef(toV3(camDef?.position));
   const initTarget = useRef(toV3(camDef?.target ?? { x: 0, y: 0, z: 0 }));
   useEffect(() => {
@@ -395,7 +399,6 @@ export default function Page() {
     setActive("full");
   }, [car.id, isMobile, camDef]);
 
-  // 可选：记录当前相机/目标（便于调试）
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === "p" && controlsRef.current) {
@@ -415,7 +418,7 @@ export default function Page() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // 预加载
+  // preload
   useEffect(() => {
     useGLTF.preload("/garage_scene/scene.gltf");
   }, []);
@@ -423,7 +426,6 @@ export default function Page() {
     if (car?.model) useGLTF.preload(car.model);
   }, [car?.model]);
 
-  // JSON -> THREE（按当前 viewSource）
   const views: ViewsMap = useMemo(() => {
     const build = (x?: ViewDef) =>
       x ? { pos: toV3(x.pos), target: toV3(x.target) } : null;
@@ -642,7 +644,7 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Bottom actions (mobile-friendly) */}
+      {/* Bottom actions */}
       <div
         className={`
         fixed left-1/2 bottom-5 z-50 -translate-x-1/2
@@ -650,13 +652,11 @@ export default function Page() {
         pointer-events-none
         `}
         style={{
-          // 兼容新旧 iOS 安全区：env + constant
           paddingBottom:
             "calc((env(safe-area-inset-bottom, 0px) + constant(safe-area-inset-bottom, 0px)) + 16px)",
         }}
       >
         <div className="w-full space-y-2 sm:space-y-3 pointer-events-auto mx-auto">
-          {/* 顶行：加购 + 移动端信息气泡（仅在 md 以下显示） */}
           <div className="flex md:hidden items-center gap-2 sm:gap-3 h-[50px]">
             {/* Add to cart Button */}
             <Button
@@ -723,13 +723,12 @@ export default function Page() {
                     {car.name}
                   </SheetTitle>
                 </SheetHeader>
-                {/* 复用信息面板 */}
                 <CarInfoPanel containerClass="w-full border-0 bg-transparent p-0 backdrop-blur-0" />
               </SheetContent>
             </Sheet>
           </div>
 
-          {/* 视角切换：可横向滚动，保持可点触 */}
+          {/* views change */}
           <div className="flex justify-center">
             <div
               className="
@@ -769,7 +768,7 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Canvas：随着 car 或断点变化重建，应用对应的初始相机 */}
+      {/* Canvas */}
       <Canvas
         key={`${car.id}-${isMobile ? "m" : "d"}`}
         camera={{
@@ -812,17 +811,6 @@ export default function Page() {
           <Preload all />
         </Suspense>
 
-        {/* <OrbitControls
-          key={`${car.id}-${isMobile ? "m" : "d"}`}
-          ref={controlsRef}
-          target={toV3(camDef?.target ?? { x: 0, y: 0, z: 0 })}
-          enablePan
-          enableZoom
-          minPolarAngle={Math.PI / 3}
-          maxPolarAngle={Math.PI / 2.2}
-          enableDamping
-          dampingFactor={0.08}
-        /> */}
         <OrbitControls
           ref={controlsRef}
           target={toV3(camDef?.target ?? { x: 0, y: 0, z: 0 })}

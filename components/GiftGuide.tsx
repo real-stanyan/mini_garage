@@ -65,7 +65,7 @@ function writeCart(items: CartItem[]) {
 
 function addToCart(p: { name: string; price_now: string; image: string }) {
   const cart = readCart();
-  const id = p.name; // 简化：用 name 当 id
+  const id = p.name;
   const price = Number(p.price_now) || 0;
 
   const idx = cart.findIndex((it) => it.id === id);
@@ -73,30 +73,15 @@ function addToCart(p: { name: string; price_now: string; image: string }) {
   else cart.push({ id, name: p.name, price, image: p.image, qty: 1 });
 
   writeCart(cart);
-  // 可选：通知全局（角标等）
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("cart:updated", { detail: cart }));
   }
 }
 
-/* ---------- responsive hook (md breakpoint) ---------- */
-function useIsMdUp() {
-  const [isMdUp, setIsMdUp] = useState(false);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(min-width: 768px)");
-    const onChange = () => setIsMdUp(mq.matches);
-    onChange();
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-  return isMdUp;
-}
-
 /* ---------- Add-to-cart button (per card state) ---------- */
 function AddButton({ item }: { item: Product }) {
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<Status>(0); // 0 idle, 1 success, 2 fail
+  const [status, setStatus] = useState<Status>(0);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
@@ -182,7 +167,6 @@ function AddButton({ item }: { item: Product }) {
     </Button>
   );
 }
-
 /* ---------- GiftGuide ---------- */
 const GiftGuide = () => {
   const [option, setOption] = useState("All");
@@ -329,7 +313,6 @@ const GiftGuide = () => {
                     )}
                   </div>
 
-                  {/* 新按钮（带 loading/成功/失败 状态） */}
                   <AddButton item={item} />
                 </div>
               </div>
